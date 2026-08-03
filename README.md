@@ -1,6 +1,6 @@
-# 💸 SpendWise — Monthly Expense Tracker PWA
+# 💸 SpendWise — Personal Finance Dashboard
 
-> A premium, offline-first personal finance dashboard built with React + TypeScript + IndexedDB. Track expenses, set budgets, get smart insights, and analyze your spending — all from your browser, with zero cloud dependency.
+> A premium, offline-first personal finance app built with React + TypeScript + IndexedDB. Track expenses, set budgets, get smart insights, and analyze your spending — all from your browser, with zero cloud dependency.
 
 ---
 
