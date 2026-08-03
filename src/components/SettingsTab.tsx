@@ -191,12 +191,64 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                 onChange={(e) => setCurrency(e.target.value)}
                 required
               >
-                <option value="$">US Dollar ($)</option>
-                <option value="€">Euro (€)</option>
-                <option value="₹">Indian Rupee (₹)</option>
-                <option value="£">British Pound (£)</option>
-                <option value="¥">Yen / Yuan (¥)</option>
-                <option value="₩">Korean Won (₩)</option>
+                <optgroup label="🌍 Americas">
+                  <option value="$">US Dollar — USD ($)</option>
+                  <option value="CA$">Canadian Dollar — CAD (CA$)</option>
+                  <option value="MX$">Mexican Peso — MXN (MX$)</option>
+                  <option value="R$">Brazilian Real — BRL (R$)</option>
+                  <option value="AR$">Argentine Peso — ARS (AR$)</option>
+                  <option value="CL$">Chilean Peso — CLP (CL$)</option>
+                  <option value="S/">Peruvian Sol — PEN (S/)</option>
+                  <option value="Col$">Colombian Peso — COP (Col$)</option>
+                </optgroup>
+                <optgroup label="🌍 Europe">
+                  <option value="€">Euro — EUR (€)</option>
+                  <option value="£">British Pound — GBP (£)</option>
+                  <option value="CHF">Swiss Franc — CHF</option>
+                  <option value="kr">Swedish/Danish/Norwegian Krone — SEK/DKK/NOK (kr)</option>
+                  <option value="zł">Polish Złoty — PLN (zł)</option>
+                  <option value="Kč">Czech Koruna — CZK (Kč)</option>
+                  <option value="Ft">Hungarian Forint — HUF (Ft)</option>
+                  <option value="₴">Ukrainian Hryvnia — UAH (₴)</option>
+                  <option value="₺">Turkish Lira — TRY (₺)</option>
+                  <option value="₽">Russian Ruble — RUB (₽)</option>
+                </optgroup>
+                <optgroup label="🌍 Asia & Pacific">
+                  <option value="₹">Indian Rupee — INR (₹)</option>
+                  <option value="¥">Japanese Yen — JPY (¥)</option>
+                  <option value="元">Chinese Yuan — CNY (元)</option>
+                  <option value="₩">South Korean Won — KRW (₩)</option>
+                  <option value="S$">Singapore Dollar — SGD (S$)</option>
+                  <option value="HK$">Hong Kong Dollar — HKD (HK$)</option>
+                  <option value="NT$">Taiwan Dollar — TWD (NT$)</option>
+                  <option value="A$">Australian Dollar — AUD (A$)</option>
+                  <option value="NZ$">New Zealand Dollar — NZD (NZ$)</option>
+                  <option value="Rp">Indonesian Rupiah — IDR (Rp)</option>
+                  <option value="₱">Philippine Peso — PHP (₱)</option>
+                  <option value="฿">Thai Baht — THB (฿)</option>
+                  <option value="RM">Malaysian Ringgit — MYR (RM)</option>
+                  <option value="₫">Vietnamese Đồng — VND (₫)</option>
+                  <option value="৳">Bangladeshi Taka — BDT (৳)</option>
+                  <option value="Rs">Pakistani/Sri Lankan Rupee — PKR/LKR (Rs)</option>
+                  <option value="₨">Nepalese Rupee — NPR (₨)</option>
+                </optgroup>
+                <optgroup label="🌍 Middle East & Africa">
+                  <option value="﷼">Saudi Riyal — SAR (﷼)</option>
+                  <option value="د.إ">UAE Dirham — AED (د.إ)</option>
+                  <option value="₪">Israeli Shekel — ILS (₪)</option>
+                  <option value="﹩">Qatari Riyal — QAR (QR)</option>
+                  <option value="KD">Kuwaiti Dinar — KWD (KD)</option>
+                  <option value="₦">Nigerian Naira — NGN (₦)</option>
+                  <option value="R">South African Rand — ZAR (R)</option>
+                  <option value="KSh">Kenyan Shilling — KES (KSh)</option>
+                  <option value="E£">Egyptian Pound — EGP (E£)</option>
+                  <option value="DH">Moroccan Dirham — MAD (DH)</option>
+                </optgroup>
+                <optgroup label="₿ Crypto">
+                  <option value="₿">Bitcoin — BTC (₿)</option>
+                  <option value="Ξ">Ethereum — ETH (Ξ)</option>
+                  <option value="USDT">Tether — USDT</option>
+                </optgroup>
               </select>
             </div>
 
