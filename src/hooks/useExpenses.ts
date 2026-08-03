@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import dbService from '../db/IndexedDBService';
 import type { Transaction, Budget, AppSettings } from '../db/IndexedDBService';
+import { getLocaleCurrency } from '../db/IndexedDBService';
 
 export interface UseExpensesResult {
   transactions: Transaction[];
@@ -26,7 +27,7 @@ export function useExpenses(): UseExpensesResult {
   const [settings, setSettings] = useState<AppSettings>({
     name: 'User',
     monthlySavingsGoal: 500,
-    currency: '$',
+    currency: getLocaleCurrency(),
     theme: 'dark',
   });
   const [loading, setLoading] = useState<boolean>(true);

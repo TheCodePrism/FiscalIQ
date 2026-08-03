@@ -19,6 +19,30 @@ export interface AppSettings {
   theme: 'dark' | 'light';
 }
 
+/** Maps browser locale to a sensible default currency symbol. */
+export function getLocaleCurrency(): string {
+  const locale = navigator.language || 'en-US';
+  const region = locale.split('-')[1]?.toUpperCase() ?? '';
+  const map: Record<string, string> = {
+    // Americas
+    US: '$', CA: 'CA$', MX: 'MX$', BR: 'R$', AR: 'AR$', CL: 'CL$', CO: 'Col$', PE: 'S/',
+    // Europe
+    GB: '£', CH: 'CHF', SE: 'kr', NO: 'kr', DK: 'kr', PL: 'zł', CZ: 'Kč', HU: 'Ft',
+    UA: '₴', TR: '₺', RU: '₽',
+    // Asia & Pacific
+    IN: '₹', JP: '¥', CN: '元', KR: '₩', SG: 'S$', HK: 'HK$', TW: 'NT$',
+    AU: 'A$', NZ: 'NZ$', ID: 'Rp', PH: '₱', TH: '฿', MY: 'RM', VN: '₫',
+    BD: '৳', PK: 'Rs', LK: 'Rs', NP: '₨',
+    // Middle East & Africa
+    SA: '﷼', AE: 'د.إ', IL: '₪', QA: '﹩', KW: 'KD', NG: '₦', ZA: 'R',
+    KE: 'KSh', EG: 'E£', MA: 'DH',
+  };
+  // Euro zone countries
+  const euroZone = ['AT','BE','CY','EE','FI','FR','DE','GR','IE','IT','LV','LT','LU','MT','NL','PT','SK','SI','ES'];
+  if (euroZone.includes(region)) return '€';
+  return map[region] ?? '$';
+}
+
 const DB_NAME = 'ExpenseTrackerDB';
 const DB_VERSION = 1;
 
@@ -170,7 +194,7 @@ class IndexedDBService {
     const defaultSettings: AppSettings = {
       name: 'User',
       monthlySavingsGoal: 500,
-      currency: '$',
+      currency: getLocaleCurrency(),
       theme: 'dark',
     };
 
