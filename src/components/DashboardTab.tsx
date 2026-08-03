@@ -28,7 +28,8 @@ import {
   PiggyBank,
   Landmark,
   ShieldCheck,
-  Coins
+  Coins,
+  CreditCard
 } from 'lucide-react';
 
 interface DashboardTabProps {
@@ -46,6 +47,7 @@ export const categoryIcons: Record<string, React.ComponentType<any>> = {
   'Groceries': ShoppingBag,
   'Housing & Rent': Home,
   'Utilities': Zap,
+  'EMI & Loans': CreditCard,
   'Dining Out': Utensils,
   'Entertainment': Film,
   'Transport': Car,
@@ -79,6 +81,7 @@ export const getCategoryIconStyle = (category: string, isExpense: boolean) => {
     'Groceries': { bg: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' },
     'Housing & Rent': { bg: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' },
     'Utilities': { bg: 'rgba(234, 179, 8, 0.15)', color: '#eab308' },
+    'EMI & Loans': { bg: 'rgba(239, 68, 68, 0.15)', color: '#f87171' },
     'Dining Out': { bg: 'rgba(244, 63, 94, 0.15)', color: '#fb7185' },
     'Entertainment': { bg: 'rgba(168, 85, 247, 0.15)', color: '#c084fc' },
     'Transport': { bg: 'rgba(6, 182, 212, 0.15)', color: '#22d3ee' },
