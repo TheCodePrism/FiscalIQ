@@ -62,6 +62,28 @@ export const getCategoryIcon = (category: string) => {
   return <IconComponent size={20} />;
 };
 
+export const getCategoryIconStyle = (category: string, isExpense: boolean) => {
+  const styles: Record<string, { bg: string; color: string }> = {
+    'Groceries': { bg: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' },
+    'Housing & Rent': { bg: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' },
+    'Utilities': { bg: 'rgba(234, 179, 8, 0.15)', color: '#eab308' },
+    'Dining Out': { bg: 'rgba(244, 63, 94, 0.15)', color: '#fb7185' },
+    'Entertainment': { bg: 'rgba(168, 85, 247, 0.15)', color: '#c084fc' },
+    'Transport': { bg: 'rgba(6, 182, 212, 0.15)', color: '#22d3ee' },
+    'Shopping': { bg: 'rgba(236, 72, 153, 0.15)', color: '#f472b6' },
+    'Medical & Health': { bg: 'rgba(239, 68, 68, 0.15)', color: '#f87171' },
+    'Education': { bg: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa' },
+    'Salary': { bg: 'rgba(16, 185, 129, 0.15)', color: '#34d399' },
+    'Freelance & Side Hustle': { bg: 'rgba(20, 184, 166, 0.15)', color: '#2dd4bf' },
+    'Investments': { bg: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa' },
+    'Gifts': { bg: 'rgba(244, 114, 182, 0.15)', color: '#f472b6' },
+  };
+  if (styles[category]) return styles[category];
+  return isExpense 
+    ? { bg: 'var(--color-danger-light)', color: 'var(--color-danger)' }
+    : { bg: 'var(--color-success-light)', color: 'var(--color-success)' };
+};
+
 export const DashboardTab: React.FC<DashboardTabProps> = ({
   transactions,
   budgets,
@@ -241,14 +263,15 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           <div className="list-container">
             {recentTransactions.map((tx) => {
               const isExpense = tx.type === 'expense';
+              const style = getCategoryIconStyle(tx.category, isExpense);
               return (
                 <div key={tx.id} className="list-item">
                   <div className="item-left">
                     <div 
                       className="icon-wrapper" 
                       style={{ 
-                        background: isExpense ? 'var(--color-danger-light)' : 'var(--color-success-light)',
-                        color: isExpense ? 'var(--color-danger)' : 'var(--color-success)'
+                        background: style.bg,
+                        color: style.color
                       }}
                     >
                       {getCategoryIcon(tx.category)}

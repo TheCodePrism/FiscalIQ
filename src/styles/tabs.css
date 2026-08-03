@@ -228,10 +228,25 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.modal-close {
-  position: absolute;
-  top: 24px;
-  right: 24px;
+@media (max-width: 640px) {
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal-content {
+    max-width: 100%;
+    border-radius: 28px 28px 0 0;
+    padding: 24px 20px calc(24px + var(--safe-area-bottom)) 20px;
+    animation: sheetSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes sheetSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-close {
+    top: 16px;
+    right: 16px;
+  }
 }
 
 .type-selector {
@@ -483,5 +498,24 @@
   }
   .filter-select {
     width: 100%;
+  }
+  .tab-title {
+    font-size: 1.6rem;
+  }
+  .tab-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .tab-header .btn {
+    width: 100%;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .section-card {
+    padding: 16px;
   }
 }

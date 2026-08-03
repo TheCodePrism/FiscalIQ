@@ -37,12 +37,15 @@
   --color-warning-light: rgba(245, 158, 11, 0.12);
 
   --shadow-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  --shadow-primary-glow: 0 0 15px rgba(139, 92, 246, 0.4);
-  --shadow-success-glow: 0 0 15px rgba(16, 185, 129, 0.4);
-  --shadow-danger-glow: 0 0 15px rgba(244, 63, 94, 0.4);
+  --shadow-primary-glow: 0 0 20px rgba(139, 92, 246, 0.4);
+  --shadow-success-glow: 0 0 20px rgba(16, 185, 129, 0.4);
+  --shadow-danger-glow: 0 0 20px rgba(244, 63, 94, 0.4);
   
-  --card-blur: 16px;
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --card-blur: 20px;
+  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Mobile safe areas */
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 [data-theme="light"] {
@@ -163,20 +166,16 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .app-container {
     flex-direction: column;
+    padding-bottom: calc(75px + var(--safe-area-bottom));
   }
   .sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
-    border-right: none;
-    border-bottom: 1px solid var(--panel-border);
-    padding: 16px;
+    display: none; /* Replaced by bottom nav on mobile */
   }
   .main-content {
-    padding: 20px;
+    padding: 16px 16px 32px 16px;
   }
 }
 
@@ -295,19 +294,114 @@ input:focus, select:focus, textarea:focus {
   animation: pulseGlow 2s infinite ease-in-out;
 }
 
-/* Banner Offline */
-.offline-banner {
-  background: var(--color-danger);
-  color: white;
-  text-align: center;
-  padding: 8px;
-  font-size: 0.875rem;
-  font-weight: 600;
+/* Mobile Top Bar */
+.mobile-top-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--panel-border);
   position: sticky;
   top: 0;
-  z-index: 999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
+  z-index: 800;
 }
+
+/* Mobile Bottom Navigation */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(64px + var(--safe-area-bottom));
+  padding-bottom: var(--safe-area-bottom);
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--panel-border);
+  z-index: 900;
+  grid-template-columns: repeat(6, 1fr);
+  align-items: center;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .mobile-bottom-nav {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 100%;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  position: relative;
+  touch-action: manipulation;
+}
+
+.mobile-nav-item.active {
+  color: var(--color-primary);
+}
+
+.mobile-nav-item.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
+  background: var(--color-primary);
+  border-radius: 0 0 4px 4px;
+  box-shadow: var(--shadow-primary-glow);
+}
+
+/* Floating Action Button (FAB) */
+.fab-add-btn {
+  display: none;
+  position: fixed;
+  bottom: calc(78px + var(--safe-area-bottom));
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.5);
+  border: none;
+  cursor: pointer;
+  z-index: 850;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fab-add-btn:active {
+  transform: scale(0.92);
+}
+
+@media (max-width: 768px) {
+  .mobile-top-bar {
+    display: flex;
+  }
+  .mobile-bottom-nav {
+    display: grid;
+  }
+  .fab-add-btn {
+    display: flex;
+  }
+}
+

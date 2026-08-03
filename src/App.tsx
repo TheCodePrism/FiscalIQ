@@ -186,7 +186,52 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Main App Container */}
+      {/* 2. Mobile Top Bar */}
+      <header className="mobile-top-bar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ 
+            background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)', 
+            width: '32px', 
+            height: '32px', 
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#ffffff',
+            boxShadow: 'var(--shadow-primary-glow)'
+          }}>
+            <LayoutDashboard size={18} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '1.1rem', fontWeight: 800, background: 'linear-gradient(135deg, #fff 0%, #9ca3af 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0, lineHeight: 1.1 }}>
+              FiscalIQ
+            </h1>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ 
+            fontSize: '0.75rem', 
+            fontWeight: 700, 
+            padding: '4px 8px', 
+            borderRadius: '20px', 
+            background: 'var(--color-primary-light)', 
+            color: 'var(--color-primary)' 
+          }}>
+            {settings.currency}
+          </span>
+          <button 
+            onClick={toggleTheme} 
+            className="icon-btn" 
+            title={settings.theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+            style={{ width: '32px', height: '32px', borderRadius: '8px' }}
+          >
+            {settings.theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+        </div>
+      </header>
+
+      {/* 3. Main App Container */}
       <div className="app-container">
         
         {/* Sidebar Nav */}
@@ -325,37 +370,61 @@ export const App: React.FC = () => {
         </main>
       </div>
 
-      {/* Floating Action Button (FAB) on small screens */}
+      {/* Mobile Floating Action Button (FAB) */}
       <button 
-        className="btn btn-primary" 
+        className="fab-add-btn" 
         onClick={handleOpenAddModal}
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          width: '56px',
-          height: '56px',
-          borderRadius: '50%',
-          padding: 0,
-          boxShadow: 'var(--shadow-primary-glow)',
-          zIndex: 99,
-          display: 'none' // handled via CSS media query below
-        }}
-        id="mobile-fab"
         title="Add Transaction"
+        aria-label="Add Transaction"
       >
-        <Plus size={24} />
+        <Plus size={26} />
       </button>
 
-      <style dangerouslySetInnerHTML={{__html: `
-        @media (max-width: 1024px) {
-          #mobile-fab {
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-          }
-        }
-      `}} />
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="mobile-bottom-nav">
+        <button 
+          className={`mobile-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+          onClick={() => setActiveTab('dashboard')}
+        >
+          <LayoutDashboard size={18} />
+          <span>Overview</span>
+        </button>
+        <button 
+          className={`mobile-nav-item ${activeTab === 'transactions' ? 'active' : ''}`}
+          onClick={() => setActiveTab('transactions')}
+        >
+          <Receipt size={18} />
+          <span>Ledger</span>
+        </button>
+        <button 
+          className={`mobile-nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          <PieChart size={18} />
+          <span>Charts</span>
+        </button>
+        <button 
+          className={`mobile-nav-item ${activeTab === 'budgets' ? 'active' : ''}`}
+          onClick={() => setActiveTab('budgets')}
+        >
+          <Sliders size={18} />
+          <span>Budgets</span>
+        </button>
+        <button 
+          className={`mobile-nav-item ${activeTab === 'insights' ? 'active' : ''}`}
+          onClick={() => setActiveTab('insights')}
+        >
+          <Lightbulb size={18} />
+          <span>Insights</span>
+        </button>
+        <button 
+          className={`mobile-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+          onClick={() => setActiveTab('settings')}
+        >
+          <SettingsIcon size={18} />
+          <span>Settings</span>
+        </button>
+      </nav>
 
       {/* 3. Global Transaction Dialog Modal */}
       <TransactionForm

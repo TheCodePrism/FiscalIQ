@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Transaction, AppSettings } from '../db/IndexedDBService';
 import { GlassCard } from './ui/GlassCard';
-import { getCategoryIcon } from './DashboardTab';
+import { getCategoryIcon, getCategoryIconStyle } from './DashboardTab';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from './TransactionForm';
 import { 
   Search, 
@@ -275,14 +275,15 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               <div className="list-container">
                 {groupedTransactions[dateStr].map(tx => {
                   const isExpense = tx.type === 'expense';
+                  const style = getCategoryIconStyle(tx.category, isExpense);
                   return (
                     <div key={tx.id} className="list-item">
                       <div className="item-left">
                         <div 
                           className="icon-wrapper" 
                           style={{ 
-                            background: isExpense ? 'var(--color-danger-light)' : 'var(--color-success-light)',
-                            color: isExpense ? 'var(--color-danger)' : 'var(--color-success)'
+                            background: style.bg,
+                            color: style.color
                           }}
                         >
                           {getCategoryIcon(tx.category)}
