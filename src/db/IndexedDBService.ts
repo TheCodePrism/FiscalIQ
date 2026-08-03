@@ -4,7 +4,7 @@ export interface Transaction {
   category: string;
   date: string; // YYYY-MM-DD
   description: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'savings';
 }
 
 export interface Budget {

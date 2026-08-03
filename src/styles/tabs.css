@@ -153,6 +153,10 @@
   color: var(--color-danger);
 }
 
+.amount-savings {
+  color: var(--color-primary);
+}
+
 .item-actions {
   display: flex;
   gap: 8px;
@@ -278,6 +282,12 @@
   background: var(--color-danger-light);
   border-color: var(--color-danger);
   color: var(--color-danger);
+}
+
+.type-btn.active.savings {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 /* 4. Analytics Tab SVG Charts */

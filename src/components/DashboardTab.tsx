@@ -24,7 +24,11 @@ import {
   Gift, 
   HelpCircle,
   Edit2,
-  Trash2
+  Trash2,
+  PiggyBank,
+  Landmark,
+  ShieldCheck,
+  Coins
 } from 'lucide-react';
 
 interface DashboardTabProps {
@@ -54,7 +58,15 @@ export const categoryIcons: Record<string, React.ComponentType<any>> = {
   'Freelance & Side Hustle': Briefcase,
   'Investments': TrendingUp,
   'Gifts': Gift,
-  'Other Income': HelpCircle
+  'Other Income': HelpCircle,
+  // Savings
+  'Emergency Fund': PiggyBank,
+  'Mutual Funds & Stocks': TrendingUp,
+  'Fixed Deposit / RD': Landmark,
+  'Retirement & Pension': ShieldCheck,
+  'Crypto & Digital Assets': Coins,
+  'Gold & Commodities': DollarSign,
+  'Other Savings': PiggyBank
 };
 
 export const getCategoryIcon = (category: string) => {
@@ -77,8 +89,16 @@ export const getCategoryIconStyle = (category: string, isExpense: boolean) => {
     'Freelance & Side Hustle': { bg: 'rgba(20, 184, 166, 0.15)', color: '#2dd4bf' },
     'Investments': { bg: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa' },
     'Gifts': { bg: 'rgba(244, 114, 182, 0.15)', color: '#f472b6' },
+    'Emergency Fund': { bg: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa' },
+    'Mutual Funds & Stocks': { bg: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' },
+    'Fixed Deposit / RD': { bg: 'rgba(14, 165, 233, 0.15)', color: '#38bdf8' },
+    'Retirement & Pension': { bg: 'rgba(168, 85, 247, 0.15)', color: '#c084fc' },
+    'Crypto & Digital Assets': { bg: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' },
+    'Gold & Commodities': { bg: 'rgba(234, 179, 8, 0.15)', color: '#facc15' },
+    'Other Savings': { bg: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa' }
   };
   if (styles[category]) return styles[category];
+  if (category.toLowerCase().includes('savings')) return { bg: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa' };
   return isExpense 
     ? { bg: 'var(--color-danger-light)', color: 'var(--color-danger)' }
     : { bg: 'var(--color-success-light)', color: 'var(--color-success)' };
@@ -114,11 +134,16 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     .filter(tx => tx.type === 'expense')
     .reduce((sum, tx) => sum + tx.amount, 0);
 
-  const currentMonthBalance = currentMonthIncome - currentMonthExpenses;
+  const currentMonthSavings = thisMonthTransactions
+    .filter(tx => tx.type === 'savings')
+    .reduce((sum, tx) => sum + tx.amount, 0);
 
-  // Savings rate calculation
+  const currentMonthBalance = currentMonthIncome - currentMonthExpenses - currentMonthSavings;
+
+  // Savings rate calculation (includes direct savings + remaining unspent income)
+  const totalSavedAndAllocated = currentMonthSavings + Math.max(0, currentMonthBalance);
   const savingsRate = currentMonthIncome > 0 
-    ? Math.max(0, ((currentMonthIncome - currentMonthExpenses) / currentMonthIncome) * 100) 
+    ? Math.max(0, (totalSavedAndAllocated / currentMonthIncome) * 100) 
     : 0;
 
   // All-time balance
@@ -201,6 +226,17 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           </div>
         </GlassCard>
 
+        {/* Savings Card */}
+        <GlassCard glowColor="var(--color-primary)">
+          <div className="stat-label">Direct Savings</div>
+          <div className="stat-value" style={{ color: 'var(--color-primary)' }}>
+            {formatCurrency(currentMonthSavings)}
+          </div>
+          <div className="stat-sub" style={{ color: 'var(--color-primary)' }}>
+            <PiggyBank size={14} /> Saved & Invested
+          </div>
+        </GlassCard>
+
         {/* Savings Rate Card */}
         <GlassCard glowColor="var(--color-warning)">
           <div className="stat-label">Savings Rate</div>
@@ -263,7 +299,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           <div className="list-container">
             {recentTransactions.map((tx) => {
               const isExpense = tx.type === 'expense';
+              const isSavings = tx.type === 'savings';
               const style = getCategoryIconStyle(tx.category, isExpense);
+              const amountClass = isExpense ? 'amount-expense' : isSavings ? 'amount-savings' : 'amount-income';
+              const sign = isExpense ? '-' : isSavings ? '💎 ' : '+';
               return (
                 <div key={tx.id} className="list-item">
                   <div className="item-left">
@@ -284,8 +323,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     </div>
                   </div>
                   <div className="item-right">
-                    <span className={`item-amount ${isExpense ? 'amount-expense' : 'amount-income'}`}>
-                      {isExpense ? '-' : '+'}{formatCurrency(tx.amount)}
+                    <span className={`item-amount ${amountClass}`}>
+                      {sign}{formatCurrency(tx.amount)}
                     </span>
                     <div className="item-actions">
                       <button 

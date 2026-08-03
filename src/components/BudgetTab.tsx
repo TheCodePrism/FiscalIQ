@@ -147,7 +147,7 @@ export const BudgetTab: React.FC<BudgetTabProps> = ({
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 required
               >
-                {EXPENSE_CATEGORIES.map(cat => (
+                {EXPENSE_CATEGORIES.map((cat: string) => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>

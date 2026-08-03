@@ -10,7 +10,7 @@ interface TransactionFormProps {
   currencySymbol: string;
 }
 
-const EXPENSE_CATEGORIES = [
+export const EXPENSE_CATEGORIES = [
   'Groceries',
   'Housing & Rent',
   'Utilities',
@@ -23,12 +23,22 @@ const EXPENSE_CATEGORIES = [
   'Other Expense'
 ];
 
-const INCOME_CATEGORIES = [
+export const INCOME_CATEGORIES = [
   'Salary',
   'Freelance & Side Hustle',
   'Investments',
   'Gifts',
   'Other Income'
+];
+
+export const SAVINGS_CATEGORIES = [
+  'Emergency Fund',
+  'Mutual Funds & Stocks',
+  'Fixed Deposit / RD',
+  'Retirement & Pension',
+  'Crypto & Digital Assets',
+  'Gold & Commodities',
+  'Other Savings'
 ];
 
 export const TransactionForm: React.FC<TransactionFormProps> = ({
@@ -38,7 +48,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   transactionToEdit,
   currencySymbol
 }) => {
-  const [type, setType] = useState<'income' | 'expense'>('expense');
+  const [type, setType] = useState<'income' | 'expense' | 'savings'>('expense');
   const [amount, setAmount] = useState<string>('');
   const [category, setCategory] = useState<string>('');
   const [date, setDate] = useState<string>('');
@@ -72,9 +82,17 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   // Set default category when type changes
   useEffect(() => {
     if (!transactionToEdit) {
-      setCategory(type === 'expense' ? EXPENSE_CATEGORIES[0] : INCOME_CATEGORIES[0]);
+      if (type === 'expense') setCategory(EXPENSE_CATEGORIES[0]);
+      else if (type === 'income') setCategory(INCOME_CATEGORIES[0]);
+      else setCategory(SAVINGS_CATEGORIES[0]);
     }
   }, [type, transactionToEdit]);
+
+  const categories = type === 'expense' 
+    ? EXPENSE_CATEGORIES 
+    : type === 'income' 
+      ? INCOME_CATEGORIES 
+      : SAVINGS_CATEGORIES;
 
   if (!isOpen) return null;
 
@@ -121,7 +139,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     }
   };
 
-  const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -140,7 +158,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
         <form onSubmit={handleSubmit}>
           {/* 1. Type Toggle */}
-          <div className="type-selector">
+          <div className="type-selector" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
             <div 
               className={`type-btn ${type === 'expense' ? 'active expense' : ''}`}
               onClick={() => setType('expense')}
@@ -152,6 +170,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
               onClick={() => setType('income')}
             >
               Income
+            </div>
+            <div 
+              className={`type-btn ${type === 'savings' ? 'active savings' : ''}`}
+              onClick={() => setType('savings')}
+            >
+              Savings
             </div>
           </div>
 
@@ -239,4 +263,3 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 };
 
 export default TransactionForm;
-export { EXPENSE_CATEGORIES, INCOME_CATEGORIES };
