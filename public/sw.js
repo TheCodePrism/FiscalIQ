@@ -1,4 +1,4 @@
-const CACHE_NAME = 'spendwise-cache-v1';
+const CACHE_NAME = 'fiscaliq-cache-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

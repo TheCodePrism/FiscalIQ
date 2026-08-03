@@ -208,7 +208,7 @@ export const App: React.FC = () => {
             </div>
             <div>
               <h1 style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', background: 'linear-gradient(135deg, #fff 0%, #9ca3af 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                SpendWise
+                FiscalIQ
               </h1>
               <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--color-primary)', fontWeight: 700 }}>
                 IndexedDB PWA
@@ -231,7 +231,7 @@ export const App: React.FC = () => {
             <div className="pwa-promo" style={{ padding: '12px', fontSize: '0.8rem', flexDirection: 'column', gap: '8px', borderStyle: 'solid' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
                 <DownloadCloud size={16} style={{ color: 'var(--color-primary)' }} />
-                <span>Install SpendWise App</span>
+                <span>Install FiscalIQ App</span>
               </div>
               <button 
                 className="btn btn-primary" 

@@ -1,7 +1,7 @@
 {
-  "name": "SpendWise",
-  "short_name": "SpendWise",
-  "description": "SpendWise — a premium offline-first personal finance dashboard with smart analytics, budgeting, and insights.",
+  "name": "FiscalIQ",
+  "short_name": "FiscalIQ",
+  "description": "FiscalIQ — a premium offline-first personal finance dashboard with smart analytics, budgeting, and insights.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
