@@ -113,16 +113,18 @@ class IndexedDBService {
         try {
           const synced = await this.syncRecurringTransactions(result);
           if (synced) {
-            // Re-fetch updated list after auto-generation
-            const refreshed = await new Promise<Transaction[]>((res) => {
-              const req2 = store.getAll();
+            // Re-fetch using a FRESH DB transaction — the original one is already closed
+            const freshDb = await this.initDB();
+            result = await new Promise<Transaction[]>((res) => {
+              const freshTx = freshDb.transaction('transactions', 'readonly');
+              const freshStore = freshTx.objectStore('transactions');
+              const req2 = freshStore.getAll();
               req2.onsuccess = () => res(req2.result || []);
-              req2.onerror = () => res(result);
+              req2.onerror = () => res(result); // fallback to pre-sync list
             });
-            result = refreshed;
           }
         } catch {
-          // ignore auto-sync errors
+          // ignore auto-sync errors — data will be correct on next refresh
         }
 
         // Sort transactions by date descending (newest first)
@@ -161,18 +163,49 @@ class IndexedDBService {
 
   public async deleteTransaction(id: number): Promise<void> {
     const db = await this.initDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction('transactions', 'readwrite');
-      const store = transaction.objectStore('transactions');
-      const request = store.delete(id);
 
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+    // Fetch all transactions to detect cascade-delete of recurring children
+    const allTx = await new Promise<Transaction[]>((res, rej) => {
+      const readTx = db.transaction('transactions', 'readonly');
+      const req = readTx.objectStore('transactions').getAll();
+      req.onsuccess = () => res(req.result || []);
+      req.onerror = () => rej(req.error);
+    });
+
+    const master = allTx.find(tx => tx.id === id);
+    const idsToDelete: number[] = [id];
+
+    // If deleting a master recurring entry, cascade-delete all auto-generated children
+    if (master?.isRecurring && !master?.parentRecurringId) {
+      allTx.forEach(tx => {
+        if (tx.parentRecurringId === id && tx.id !== undefined) {
+          idsToDelete.push(tx.id);
+        }
+      });
+    }
+
+    return new Promise((resolve, reject) => {
+      const writeTx = db.transaction('transactions', 'readwrite');
+      const store = writeTx.objectStore('transactions');
+      let remaining = idsToDelete.length;
+      let failed = false;
+
+      idsToDelete.forEach(deleteId => {
+        const req = store.delete(deleteId);
+        req.onsuccess = () => {
+          if (!failed && --remaining === 0) resolve();
+        };
+        req.onerror = () => {
+          failed = true;
+          reject(req.error);
+        };
+      });
     });
   }
 
   /**
-   * Auto-generates missing monthly transaction entries for active recurring items (EMIs, SIPs, etc.)
+   * Auto-generates missing transaction entries for active recurring items.
+   * Supports monthly, weekly, and yearly frequencies.
    */
   public async syncRecurringTransactions(transactions: Transaction[]): Promise<boolean> {
     const recurringMasters = transactions.filter(tx => tx.isRecurring && !tx.parentRecurringId);
@@ -182,39 +215,80 @@ class IndexedDBService {
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth(); // 0-indexed
     const currentMonthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
     let createdCount = 0;
 
+    const makeEntry = async (masterId: number, master: Transaction, dateStr: string) => {
+      await this.addTransaction({
+        amount: master.amount,
+        category: master.category,
+        date: dateStr,
+        description: `${master.description || master.category} (Auto-recurring)`,
+        type: master.type,
+        parentRecurringId: masterId,
+        isRecurring: false
+      });
+      createdCount++;
+    };
+
     for (const master of recurringMasters) {
-      // Check if end date has passed
-      if (master.endDate) {
-        if (currentMonthPrefix > master.endDate.substring(0, 7)) {
-          continue; // Expired
+      if (master.id === undefined) continue;
+
+      const frequency = master.frequency ?? 'monthly';
+      const startDate = new Date(master.date);
+
+      // Skip if not yet reached start month
+      if (currentMonthPrefix < master.date.substring(0, 7)) continue;
+
+      // Skip if end date has passed
+      if (master.endDate && currentMonthPrefix > master.endDate.substring(0, 7)) continue;
+
+      if (frequency === 'monthly') {
+        // One entry per month on dayOfMonth (or the day from start date)
+        const alreadyExists = transactions.some(tx =>
+          (tx.parentRecurringId === master.id || tx.id === master.id) &&
+          tx.date.startsWith(currentMonthPrefix)
+        );
+        if (!alreadyExists) {
+          const day = master.dayOfMonth || parseInt(master.date.split('-')[2] || '1', 10);
+          const validDay = Math.min(day, daysInMonth);
+          await makeEntry(master.id, master, `${currentMonthPrefix}-${String(validDay).padStart(2, '0')}`);
         }
-      }
 
-      // Check if entry for current month already exists
-      const exists = transactions.some(tx => 
-        (tx.parentRecurringId === master.id || tx.id === master.id) &&
-        tx.date.startsWith(currentMonthPrefix)
-      );
+      } else if (frequency === 'weekly') {
+        // One entry per week — same day-of-week as the start date, up to today
+        const targetDayOfWeek = startDate.getDay();
+        for (let d = 1; d <= daysInMonth; d++) {
+          const candidate = new Date(currentYear, currentMonth, d);
+          if (candidate > today) break; // never generate future entries
+          if (candidate.getDay() !== targetDayOfWeek) continue;
 
-      if (!exists && master.id !== undefined) {
-        const day = master.dayOfMonth || parseInt(master.date.split('-')[2] || '1', 10);
-        const maxDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-        const validDay = Math.min(day, maxDaysInMonth);
-        const autoDateStr = `${currentMonthPrefix}-${String(validDay).padStart(2, '0')}`;
+          const candidateDateStr = `${currentMonthPrefix}-${String(d).padStart(2, '0')}`;
+          const alreadyExists = transactions.some(tx =>
+            tx.parentRecurringId === master.id && tx.date === candidateDateStr
+          );
+          if (!alreadyExists) {
+            await makeEntry(master.id, master, candidateDateStr);
+          }
+        }
 
-        await this.addTransaction({
-          amount: master.amount,
-          category: master.category,
-          date: autoDateStr,
-          description: `${master.description || master.category} (Auto-recurring)`,
-          type: master.type,
-          parentRecurringId: master.id,
-          isRecurring: false
-        });
-        createdCount++;
+      } else if (frequency === 'yearly') {
+        // One entry per year — only in the same calendar month as the start date
+        const startMonthStr = master.date.split('-')[1]; // '01'–'12'
+        const currentMonthStr = String(currentMonth + 1).padStart(2, '0');
+        if (startMonthStr !== currentMonthStr) continue;
+
+        const alreadyExists = transactions.some(tx =>
+          (tx.parentRecurringId === master.id || tx.id === master.id) &&
+          tx.date.startsWith(`${currentYear}-`) &&
+          tx.date.split('-')[1] === currentMonthStr
+        );
+        if (!alreadyExists) {
+          const day = parseInt(master.date.split('-')[2] || '1', 10);
+          const validDay = Math.min(day, daysInMonth);
+          await makeEntry(master.id, master, `${currentMonthPrefix}-${String(validDay).padStart(2, '0')}`);
+        }
       }
     }
 

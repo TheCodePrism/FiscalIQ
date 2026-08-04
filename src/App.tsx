@@ -112,7 +112,14 @@ export const App: React.FC = () => {
   };
 
   const handleDeleteTransaction = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this transaction?')) {
+    const tx = transactions.find(t => t.id === id);
+    const isMasterRecurring = tx?.isRecurring && !tx?.parentRecurringId;
+
+    const message = isMasterRecurring
+      ? `Delete this recurring template?\n\nAll auto-generated entries linked to it will also be permanently deleted.`
+      : 'Are you sure you want to delete this transaction?';
+
+    if (window.confirm(message)) {
       await deleteTransaction(id);
     }
   };
