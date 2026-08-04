@@ -318,8 +318,18 @@ export const TrendLineChart: React.FC<TrendLineChartProps> = ({ data, currencySy
         height={height}
         viewBox={`0 0 ${width} ${height}`}
         onMouseMove={handleMouseMove}
+        onTouchStart={(e) => {
+          if (e.touches[0]) {
+            handleMouseMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } as any);
+          }
+        }}
+        onTouchMove={(e) => {
+          if (e.touches[0]) {
+            handleMouseMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY } as any);
+          }
+        }}
         onMouseLeave={handleMouseLeave}
-        style={{ overflow: 'visible' }}
+        style={{ overflow: 'visible', touchAction: 'none' }}
       >
         <defs>
           <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">

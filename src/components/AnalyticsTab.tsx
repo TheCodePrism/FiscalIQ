@@ -213,9 +213,9 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ transactions, settin
       <div 
         style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-          gap: '24px', 
-          marginTop: '24px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
+          gap: '16px', 
+          marginTop: '20px' 
         }}
       >
         <GlassCard style={{ padding: '24px', display: 'flex', gap: '16px', alignItems: 'center' }}>

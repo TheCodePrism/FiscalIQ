@@ -133,7 +133,7 @@ export const BudgetTab: React.FC<BudgetTabProps> = ({
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '24px', alignItems: 'flex-start' }} className="analytics-grid">
+      <div className="analytics-grid" style={{ gap: '24px', alignItems: 'flex-start' }}>
         {/* Create/Update Budget Form */}
         <GlassCard style={{ padding: '24px' }}>
           <h3 className="section-title" style={{ marginBottom: '20px' }}>Set Category Budget</h3>

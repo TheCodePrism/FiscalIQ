@@ -162,7 +162,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '24px' }} className="analytics-grid">
+      <div className="analytics-grid" style={{ gap: '24px' }}>
         {/* Profile Settings */}
         <GlassCard className="settings-section">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
