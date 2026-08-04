@@ -323,7 +323,7 @@ input:focus, select:focus, textarea:focus {
   -webkit-backdrop-filter: blur(24px);
   border-top: 1px solid var(--panel-border);
   z-index: 900;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   align-items: center;
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.3);
 }

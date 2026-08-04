@@ -228,6 +228,20 @@ export const App: React.FC = () => {
           >
             {settings.theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
+          <button 
+            onClick={() => setActiveTab('settings')} 
+            className={`icon-btn ${activeTab === 'settings' ? 'active' : ''}`}
+            title="Settings"
+            style={{ 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '8px',
+              color: activeTab === 'settings' ? 'var(--color-primary)' : 'var(--text-secondary)',
+              background: activeTab === 'settings' ? 'var(--color-primary-light)' : 'transparent'
+            }}
+          >
+            <SettingsIcon size={16} />
+          </button>
         </div>
       </header>
 
@@ -416,13 +430,6 @@ export const App: React.FC = () => {
         >
           <Lightbulb size={18} />
           <span>Insights</span>
-        </button>
-        <button 
-          className={`mobile-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-          onClick={() => setActiveTab('settings')}
-        >
-          <SettingsIcon size={18} />
-          <span>Settings</span>
         </button>
       </nav>
 
