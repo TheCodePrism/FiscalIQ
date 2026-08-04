@@ -175,6 +175,21 @@ class IndexedDBService {
     const master = allTx.find(tx => tx.id === id);
     const idsToDelete: number[] = [id];
 
+    // If deleting a child entry of a recurring transaction, record it as skipped
+    if (master && master.parentRecurringId && master.date) {
+      try {
+        const skippedRaw = localStorage.getItem('fiscaliq_skipped_recurrences');
+        const skippedList: string[] = skippedRaw ? JSON.parse(skippedRaw) : [];
+        const skipKey = `${master.parentRecurringId}-${master.date}`;
+        if (!skippedList.includes(skipKey)) {
+          skippedList.push(skipKey);
+          localStorage.setItem('fiscaliq_skipped_recurrences', JSON.stringify(skippedList));
+        }
+      } catch (e) {
+        console.error('Failed to save skipped recurrence to localStorage:', e);
+      }
+    }
+
     // If deleting a master recurring entry, cascade-delete all auto-generated children
     if (master?.isRecurring && !master?.parentRecurringId) {
       allTx.forEach(tx => {
@@ -182,6 +197,18 @@ class IndexedDBService {
           idsToDelete.push(tx.id);
         }
       });
+      // Clean up localStorage skipped entries for this master ID
+      try {
+        const skippedRaw = localStorage.getItem('fiscaliq_skipped_recurrences');
+        if (skippedRaw) {
+          const skippedList: string[] = JSON.parse(skippedRaw);
+          const prefix = `${id}-`;
+          const filtered = skippedList.filter(item => !item.startsWith(prefix));
+          localStorage.setItem('fiscaliq_skipped_recurrences', JSON.stringify(filtered));
+        }
+      } catch (e) {
+        console.error('Failed to clean up skipped list:', e);
+      }
     }
 
     return new Promise((resolve, reject) => {
@@ -219,6 +246,13 @@ class IndexedDBService {
 
     let createdCount = 0;
 
+    // Load explicitly skipped recurrences
+    let skippedList: string[] = [];
+    try {
+      const skippedRaw = localStorage.getItem('fiscaliq_skipped_recurrences');
+      if (skippedRaw) skippedList = JSON.parse(skippedRaw);
+    } catch {}
+
     const makeEntry = async (masterId: number, master: Transaction, dateStr: string) => {
       await this.addTransaction({
         amount: master.amount,
@@ -253,7 +287,12 @@ class IndexedDBService {
         if (!alreadyExists) {
           const day = master.dayOfMonth || parseInt(master.date.split('-')[2] || '1', 10);
           const validDay = Math.min(day, daysInMonth);
-          await makeEntry(master.id, master, `${currentMonthPrefix}-${String(validDay).padStart(2, '0')}`);
+          const autoDateStr = `${currentMonthPrefix}-${String(validDay).padStart(2, '0')}`;
+          
+          const skipKey = `${master.id}-${autoDateStr}`;
+          if (!skippedList.includes(skipKey)) {
+            await makeEntry(master.id, master, autoDateStr);
+          }
         }
 
       } else if (frequency === 'weekly') {
@@ -269,7 +308,10 @@ class IndexedDBService {
             tx.parentRecurringId === master.id && tx.date === candidateDateStr
           );
           if (!alreadyExists) {
-            await makeEntry(master.id, master, candidateDateStr);
+            const skipKey = `${master.id}-${candidateDateStr}`;
+            if (!skippedList.includes(skipKey)) {
+              await makeEntry(master.id, master, candidateDateStr);
+            }
           }
         }
 
@@ -287,7 +329,12 @@ class IndexedDBService {
         if (!alreadyExists) {
           const day = parseInt(master.date.split('-')[2] || '1', 10);
           const validDay = Math.min(day, daysInMonth);
-          await makeEntry(master.id, master, `${currentMonthPrefix}-${String(validDay).padStart(2, '0')}`);
+          const autoDateStr = `${currentMonthPrefix}-${String(validDay).padStart(2, '0')}`;
+          
+          const skipKey = `${master.id}-${autoDateStr}`;
+          if (!skippedList.includes(skipKey)) {
+            await makeEntry(master.id, master, autoDateStr);
+          }
         }
       }
     }
