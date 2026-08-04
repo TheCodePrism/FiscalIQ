@@ -44,12 +44,50 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
   const currencySymbol = settings.currency;
 
-  // Extract unique month-years from all transactions to populate the month dropdown
+  // Helper: returns true if a recurring master is active in a given YYYY-MM month
+  const recurringCoversMonth = (tx: Transaction, monthYYYYMM: string): boolean => {
+    if (!tx.isRecurring || tx.parentRecurringId) return false;
+    const startYM = tx.date.substring(0, 7);
+    const endYM = tx.endDate ? tx.endDate.substring(0, 7) : null;
+    if (monthYYYYMM < startYM) return false;
+    if (endYM && monthYYYYMM > endYM) return false;
+    // For yearly recurrence, only the same calendar month counts
+    if (tx.frequency === 'yearly') {
+      const startMonth = startYM.split('-')[1];
+      const filterMonth = monthYYYYMM.split('-')[1];
+      return startMonth === filterMonth;
+    }
+    return true;
+  };
+
+  // Extract unique month-years from all transactions + months covered by recurring masters
   const monthOptions = useMemo(() => {
     const months = new Set<string>();
+    const today = new Date();
+    const todayYM = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
     transactions.forEach(tx => {
       if (tx.date) {
-        months.add(tx.date.substring(0, 7)); // YYYY-MM
+        months.add(tx.date.substring(0, 7));
+      }
+      // For recurring masters, add all active months up to today
+      if (tx.isRecurring && !tx.parentRecurringId) {
+        const startYM = tx.date.substring(0, 7);
+        const endYM = tx.endDate ? tx.endDate.substring(0, 7) : todayYM;
+        const clampedEnd = endYM < todayYM ? endYM : todayYM;
+
+        let [sy, sm] = startYM.split('-').map(Number);
+        const [ey, em] = clampedEnd.split('-').map(Number);
+
+        while (sy < ey || (sy === ey && sm <= em)) {
+          const ym = `${sy}-${String(sm).padStart(2, '0')}`;
+          // For yearly frequency, only add same calendar month
+          if (tx.frequency !== 'yearly' || String(sm).padStart(2, '0') === startYM.split('-')[1]) {
+            months.add(ym);
+          }
+          sm++;
+          if (sm > 12) { sm = 1; sy++; }
+        }
       }
     });
     return Array.from(months).sort((a, b) => b.localeCompare(a));
@@ -77,12 +115,16 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       // 3. Category Filter
       const matchCategory = categoryFilter === 'all' || tx.category === categoryFilter;
 
-      // 4. Month Filter
-      const matchMonth = monthFilter === 'all' || tx.date.startsWith(monthFilter);
+      // 4. Month Filter — regular transactions match by date prefix;
+      //    recurring master templates match if the selected month falls in their active range
+      const matchMonth = monthFilter === 'all'
+        || tx.date.startsWith(monthFilter)
+        || recurringCoversMonth(tx, monthFilter);
 
       return matchSearch && matchType && matchCategory && matchMonth;
     });
   }, [transactions, search, typeFilter, categoryFilter, monthFilter]);
+
 
   // Reset pagination when filter changes
   React.useEffect(() => {
