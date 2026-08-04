@@ -522,13 +522,23 @@
 
 .search-input-wrapper {
   flex: 1;
-  min-width: 200px;
+  min-width: 160px;
   position: relative;
+}
+
+.filter-toggle-label {
+  display: inline;
 }
 
 .filter-select {
   width: auto;
   min-width: 140px;
+}
+
+@media (max-width: 400px) {
+  .filter-toggle-label {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {

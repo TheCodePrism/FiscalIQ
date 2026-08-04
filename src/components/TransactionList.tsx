@@ -13,7 +13,9 @@ import {
   Trash2,
   ChevronDown,
   RefreshCw,
-  Copy
+  Copy,
+  SlidersHorizontal,
+  X
 } from 'lucide-react';
 
 interface TransactionListProps {
@@ -38,6 +40,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [monthFilter, setMonthFilter] = useState('all'); // format: YYYY-MM
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const currencySymbol = settings.currency;
 
@@ -155,65 +158,177 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       </div>
 
       {/* Filters Bar */}
-      <GlassCard style={{ padding: '20px', marginBottom: '24px' }}>
-        <div className="filters-bar">
-          {/* Search bar */}
-          <div className="search-input-wrapper">
-            <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <GlassCard style={{ padding: '16px 20px', marginBottom: '24px' }}>
+        {/* Row 1: Search + Filter toggle */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: filtersOpen ? '16px' : '0' }}>
+          <div className="search-input-wrapper" style={{ flex: 1 }}>
+            <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
               type="text"
-              placeholder="Search descriptions, categories..."
+              placeholder="Search transactions..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: '48px' }}
+              style={{ paddingLeft: '42px', paddingRight: search ? '40px' : '14px' }}
             />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                style={{
+                  position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  color: 'var(--text-muted)', display: 'flex', alignItems: 'center', padding: '4px'
+                }}
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
-
-          {/* Type Select */}
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <select
-              className="filter-select"
-              value={typeFilter}
-              onChange={(e) => {
-                setTypeFilter(e.target.value as any);
-                setCategoryFilter('all'); // reset category
-              }}
-            >
-              <option value="all">All Types</option>
-              <option value="income">Income Only</option>
-              <option value="expense">Expense Only</option>
-              <option value="savings">Savings Only</option>
-            </select>
-
-            {/* Category Select */}
-            <select
-              className="filter-select"
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-            >
-              <option value="all">All Categories</option>
-              {allCategories.map((cat: string) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-
-            {/* Month Select */}
-            <select
-              className="filter-select"
-              value={monthFilter}
-              onChange={(e) => setMonthFilter(e.target.value)}
-            >
-              <option value="all">All Months</option>
-              {monthOptions.map(m => {
-                const [year, month] = m.split('-');
-                const date = new Date(Number(year), Number(month) - 1, 1);
-                const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
-                return <option key={m} value={m}>{monthName}</option>;
-              })}
-            </select>
-          </div>
+          <button
+            onClick={() => setFiltersOpen(f => !f)}
+            className="icon-btn"
+            aria-label="Toggle filters"
+            title="Toggle filters"
+            style={{
+              border: '1px solid',
+              borderColor: (typeFilter !== 'all' || categoryFilter !== 'all' || monthFilter !== 'all')
+                ? 'var(--color-primary)'
+                : 'var(--panel-border)',
+              background: (typeFilter !== 'all' || categoryFilter !== 'all' || monthFilter !== 'all')
+                ? 'var(--color-primary-light)'
+                : 'transparent',
+              color: (typeFilter !== 'all' || categoryFilter !== 'all' || monthFilter !== 'all')
+                ? 'var(--color-primary)'
+                : 'var(--text-secondary)',
+              borderRadius: '10px',
+              padding: '10px 14px',
+              flexShrink: 0,
+              gap: '6px',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+            }}
+          >
+            <SlidersHorizontal size={16} />
+            <span className="filter-toggle-label">Filters</span>
+            {(typeFilter !== 'all' || categoryFilter !== 'all' || monthFilter !== 'all') && (
+              <span style={{
+                background: 'var(--color-primary)',
+                color: '#fff',
+                borderRadius: '20px',
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                padding: '1px 6px',
+                minWidth: '18px',
+                textAlign: 'center'
+              }}>
+                {[typeFilter !== 'all', categoryFilter !== 'all', monthFilter !== 'all'].filter(Boolean).length}
+              </span>
+            )}
+          </button>
         </div>
+
+        {/* Collapsible filter panel */}
+        {filtersOpen && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+            {/* Type filter — pill tabs */}
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+                Type
+              </div>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {(['all', 'income', 'expense', 'savings'] as const).map(t => (
+                  <button
+                    key={t}
+                    onClick={() => { setTypeFilter(t); setCategoryFilter('all'); }}
+                    style={{
+                      padding: '7px 14px',
+                      borderRadius: '20px',
+                      border: '1px solid',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      borderColor: typeFilter === t
+                        ? t === 'income' ? 'var(--color-success)'
+                          : t === 'expense' ? 'var(--color-danger)'
+                          : t === 'savings' ? 'var(--color-primary)'
+                          : 'var(--text-secondary)'
+                        : 'var(--panel-border)',
+                      background: typeFilter === t
+                        ? t === 'income' ? 'var(--color-success-light)'
+                          : t === 'expense' ? 'var(--color-danger-light)'
+                          : t === 'savings' ? 'var(--color-primary-light)'
+                          : 'var(--panel-border-hover)'
+                        : 'transparent',
+                      color: typeFilter === t
+                        ? t === 'income' ? 'var(--color-success)'
+                          : t === 'expense' ? 'var(--color-danger)'
+                          : t === 'savings' ? 'var(--color-primary)'
+                          : 'var(--text-primary)'
+                        : 'var(--text-secondary)',
+                    }}
+                  >
+                    {t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Category + Month — two selects */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
+              <div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
+                  Category
+                </div>
+                <select
+                  className="filter-select"
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  style={{ width: '100%' }}
+                >
+                  <option value="all">All Categories</option>
+                  {allCategories.map((cat: string) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
+                  Month
+                </div>
+                <select
+                  className="filter-select"
+                  value={monthFilter}
+                  onChange={(e) => setMonthFilter(e.target.value)}
+                  style={{ width: '100%' }}
+                >
+                  <option value="all">All Months</option>
+                  {monthOptions.map(m => {
+                    const [year, month] = m.split('-');
+                    const date = new Date(Number(year), Number(month) - 1, 1);
+                    const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                    return <option key={m} value={m}>{monthName}</option>;
+                  })}
+                </select>
+              </div>
+            </div>
+
+            {/* Clear filters */}
+            {(typeFilter !== 'all' || categoryFilter !== 'all' || monthFilter !== 'all') && (
+              <button
+                className="btn btn-secondary"
+                onClick={() => { setTypeFilter('all'); setCategoryFilter('all'); setMonthFilter('all'); }}
+                style={{ alignSelf: 'flex-start', padding: '7px 16px', fontSize: '0.82rem' }}
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        )}
       </GlassCard>
+
 
       {/* Summary Box */}
       <div 
