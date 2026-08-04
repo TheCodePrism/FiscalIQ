@@ -460,6 +460,11 @@ class IndexedDBService {
       budgetStore.clear();
       settingsStore.clear();
 
+      // Wipe skipped recurrences log from localStorage
+      try {
+        localStorage.removeItem('fiscaliq_skipped_recurrences');
+      } catch {}
+
       transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(transaction.error);
     });
@@ -491,31 +496,34 @@ class IndexedDBService {
     if (!parsed.settings || typeof parsed.settings !== 'object') throw new Error('Invalid data: settings object is missing.');
 
     const db = await this.initDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(['transactions', 'budgets', 'settings'], 'readwrite');
-      
-      const txStore = transaction.objectStore('transactions');
+    
+    // Clear skipped recurrences cache on new import
+    try {
+      localStorage.removeItem('fiscaliq_skipped_recurrences');
+    } catch {}
+
+    // We need to import transactions in two passes or map IDs to preserve parent-child recurring links.
+    // Let's perform sequential writes to obtain the newly generated auto-increment IDs for masters,
+    // and map old IDs to new IDs.
+    const oldToNewIdMap: Record<number, number> = {};
+
+    // Separate master transactions from child/non-recurring ones
+    const masters = parsed.transactions.filter((tx: Transaction) => tx.isRecurring && !tx.parentRecurringId);
+    const others = parsed.transactions.filter((tx: Transaction) => !tx.isRecurring || tx.parentRecurringId);
+
+    // 1. Write budgets and settings first
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(['budgets', 'settings', 'transactions'], 'readwrite');
       const budgetStore = transaction.objectStore('budgets');
       const settingsStore = transaction.objectStore('settings');
+      const txStore = transaction.objectStore('transactions');
 
-      // Clear existing
-      txStore.clear();
       budgetStore.clear();
       settingsStore.clear();
+      txStore.clear(); // Wipe existing database transactions completely
 
-      // Load transactions (strip id if we want them autoincremented, or keep them to preserve link)
-      parsed.transactions.forEach((tx: Transaction) => {
-        const cleanTx = { ...tx };
-        delete cleanTx.id; // Let IndexedDB assign new auto-increment keys to avoid duplicate issues
-        txStore.add(cleanTx);
-      });
+      parsed.budgets.forEach((b: Budget) => budgetStore.put(b));
 
-      // Load budgets
-      parsed.budgets.forEach((b: Budget) => {
-        budgetStore.put(b);
-      });
-
-      // Load settings
       const settings = parsed.settings as AppSettings;
       Object.keys(settings).forEach((key) => {
         settingsStore.put({ key, value: settings[key as keyof AppSettings] });
@@ -524,6 +532,27 @@ class IndexedDBService {
       transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(transaction.error);
     });
+
+    // 2. Add masters one-by-one to collect new auto-increment IDs
+    for (const master of masters) {
+      const oldId = master.id;
+      const cleanMaster = { ...master };
+      delete cleanMaster.id;
+      const newId = await this.addTransaction(cleanMaster);
+      if (oldId !== undefined) {
+        oldToNewIdMap[oldId] = newId;
+      }
+    }
+
+    // 3. Add other transactions, mapping parentRecurringId to new IDs
+    for (const tx of others) {
+      const cleanTx = { ...tx };
+      delete cleanTx.id;
+      if (cleanTx.parentRecurringId !== undefined && oldToNewIdMap[cleanTx.parentRecurringId] !== undefined) {
+        cleanTx.parentRecurringId = oldToNewIdMap[cleanTx.parentRecurringId];
+      }
+      await this.addTransaction(cleanTx);
+    }
   }
 }
 
