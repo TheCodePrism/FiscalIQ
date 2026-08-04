@@ -11,7 +11,8 @@ import {
   DollarSign, 
   Edit2, 
   Trash2,
-  ChevronDown
+  ChevronDown,
+  RefreshCw
 } from 'lucide-react';
 
 interface TransactionListProps {
@@ -307,7 +308,29 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                           {getCategoryIcon(tx.category)}
                         </div>
                         <div className="item-details">
-                          <h4>{tx.description || tx.category}</h4>
+                          <h4 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {tx.description || tx.category}
+                            {tx.isRecurring && (
+                              <span title={`Recurring ${tx.frequency ?? 'monthly'}${tx.endDate ? ` until ${tx.endDate}` : ' (ongoing)'}`} style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '3px',
+                                fontSize: '0.65rem', fontWeight: 700, padding: '2px 6px',
+                                borderRadius: '20px', background: 'var(--color-primary-light)',
+                                color: 'var(--color-primary)', textTransform: 'uppercase'
+                              }}>
+                                <RefreshCw size={9} /> Recurring
+                              </span>
+                            )}
+                            {tx.parentRecurringId && (
+                              <span title="Auto-generated recurring entry" style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '3px',
+                                fontSize: '0.65rem', fontWeight: 600, padding: '2px 6px',
+                                borderRadius: '20px', background: 'rgba(139,92,246,0.08)',
+                                color: 'var(--text-muted)'
+                              }}>
+                                <RefreshCw size={9} /> Auto
+                              </span>
+                            )}
+                          </h4>
                           <span>{tx.category} • {tx.type.toUpperCase()}</span>
                         </div>
                       </div>

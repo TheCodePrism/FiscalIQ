@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Transaction } from '../db/IndexedDBService';
-import { X } from 'lucide-react';
+import { X, RefreshCw } from 'lucide-react';
 
 interface TransactionFormProps {
   isOpen: boolean;
@@ -54,6 +54,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   const [category, setCategory] = useState<string>('');
   const [date, setDate] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [isRecurring, setIsRecurring] = useState<boolean>(false);
+  const [frequency, setFrequency] = useState<'monthly' | 'weekly' | 'yearly'>('monthly');
+  const [endDate, setEndDate] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
@@ -65,22 +68,26 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       setCategory(transactionToEdit.category);
       setDate(transactionToEdit.date);
       setDescription(transactionToEdit.description);
+      setIsRecurring(!!transactionToEdit.isRecurring);
+      setFrequency(transactionToEdit.frequency ?? 'monthly');
+      setEndDate(transactionToEdit.endDate ?? '');
     } else {
       setType('expense');
       setAmount('');
       setCategory('');
-      // Default to local YYYY-MM-DD
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
       setDate(`${yyyy}-${mm}-${dd}`);
       setDescription('');
+      setIsRecurring(false);
+      setFrequency('monthly');
+      setEndDate('');
     }
     setErrorMsg('');
   }, [transactionToEdit, isOpen]);
 
-  // Set default category when type changes
   useEffect(() => {
     if (!transactionToEdit) {
       if (type === 'expense') setCategory(EXPENSE_CATEGORIES[0]);
@@ -124,7 +131,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         category,
         date,
         description: description.trim(),
-        type
+        type,
+        isRecurring,
+        ...(isRecurring && { frequency, endDate: endDate || undefined })
       };
 
       if (transactionToEdit && transactionToEdit.id !== undefined) {
@@ -139,8 +148,6 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       setSubmitting(false);
     }
   };
-
-
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -158,102 +165,98 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         </h3>
 
         <form onSubmit={handleSubmit}>
-          {/* 1. Type Toggle */}
           <div className="type-selector" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-            <div 
-              className={`type-btn ${type === 'expense' ? 'active expense' : ''}`}
-              onClick={() => setType('expense')}
-            >
-              Expense
-            </div>
-            <div 
-              className={`type-btn ${type === 'income' ? 'active income' : ''}`}
-              onClick={() => setType('income')}
-            >
-              Income
-            </div>
-            <div 
-              className={`type-btn ${type === 'savings' ? 'active savings' : ''}`}
-              onClick={() => setType('savings')}
-            >
-              Savings
-            </div>
+            <div className={`type-btn ${type === 'expense' ? 'active expense' : ''}`} onClick={() => setType('expense')}>Expense</div>
+            <div className={`type-btn ${type === 'income' ? 'active income' : ''}`} onClick={() => setType('income')}>Income</div>
+            <div className={`type-btn ${type === 'savings' ? 'active savings' : ''}`} onClick={() => setType('savings')}>Savings</div>
           </div>
 
-          {/* 2. Amount Input */}
           <div className="form-group">
             <label htmlFor="amount">Amount ({currencySymbol})</label>
-            <input
-              type="number"
-              id="amount"
-              step="any"
-              min="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              required
-              autoFocus
-            />
+            <input type="number" id="amount" step="any" min="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" required />
           </div>
 
-          {/* 3. Category Select */}
           <div className="form-group">
             <label htmlFor="category">Category</label>
-            <select
-              id="category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              required
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
+            <select id="category" value={category} onChange={(e) => setCategory(e.target.value)} required>
+              {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
             </select>
           </div>
 
-          {/* 4. Date Input */}
           <div className="form-group">
             <label htmlFor="date">Date</label>
-            <input
-              type="date"
-              id="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-            />
+            <input type="date" id="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </div>
 
-          {/* 5. Description Textarea */}
-          <div className="form-group">
-            <label htmlFor="description">Description (Optional)</label>
-            <input
-              type="text"
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g. Weekly groceries shopping"
-              maxLength={120}
-            />
-          </div>
-
-          {errorMsg && (
-            <div style={{ color: 'var(--color-danger)', fontSize: '0.875rem', marginBottom: '20px', fontWeight: 500 }}>
-              {errorMsg}
+          {/* Recurring Toggle */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              background: isRecurring ? 'var(--color-primary-light)' : 'var(--glass-bg)',
+              border: `1px solid ${isRecurring ? 'var(--color-primary)' : 'var(--panel-border)'}`,
+              marginBottom: '16px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onClick={() => setIsRecurring(!isRecurring)}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <RefreshCw size={15} style={{ color: isRecurring ? 'var(--color-primary)' : 'var(--text-muted)', flexShrink: 0 }} />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: isRecurring ? 'var(--color-primary)' : 'var(--text-primary)' }}>
+                  Recurring Transaction
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  Auto-posts every month/period until end date
+                </div>
+              </div>
             </div>
+            <div style={{
+              width: '44px', height: '24px', borderRadius: '12px',
+              background: isRecurring ? 'var(--color-primary)' : 'var(--panel-border)',
+              position: 'relative', transition: 'background 0.2s ease', flexShrink: 0
+            }}>
+              <div style={{
+                width: '18px', height: '18px', borderRadius: '50%', background: '#fff',
+                position: 'absolute', top: '3px',
+                left: isRecurring ? '23px' : '3px',
+                transition: 'left 0.2s ease',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.3)'
+              }} />
+            </div>
+          </div>
+
+          {isRecurring && (
+            <>
+              <div className="form-group">
+                <label>Frequency</label>
+                <select value={frequency} onChange={(e) => setFrequency(e.target.value as 'monthly' | 'weekly' | 'yearly')}>
+                  <option value="monthly">Monthly</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>End Date (Optional)</label>
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </div>
+            </>
           )}
 
-          {/* Form Actions */}
+          <div className="form-group">
+            <label htmlFor="description">Description (Optional)</label>
+            <input type="text" id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Weekly groceries shopping" maxLength={120} />
+          </div>
+
+          {errorMsg && <div style={{ color: 'var(--color-danger)', fontSize: '0.875rem', marginBottom: '20px', fontWeight: 500 }}>{errorMsg}</div>}
+
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '30px' }}>
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              className={type === 'expense' ? 'btn btn-danger' : 'btn btn-success'}
-              disabled={submitting}
-            >
+            <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+            <button type="submit" className={type === 'expense' ? 'btn btn-danger' : 'btn btn-success'} disabled={submitting}>
               {submitting ? 'Saving...' : transactionToEdit ? 'Save Changes' : 'Add Entry'}
             </button>
           </div>

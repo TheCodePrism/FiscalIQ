@@ -5,6 +5,11 @@ export interface Transaction {
   date: string; // YYYY-MM-DD
   description: string;
   type: 'income' | 'expense' | 'savings';
+  isRecurring?: boolean;
+  frequency?: 'monthly' | 'weekly' | 'yearly';
+  dayOfMonth?: number;
+  endDate?: string; // YYYY-MM-DD or empty for ongoing
+  parentRecurringId?: number;
 }
 
 export interface Budget {
@@ -101,9 +106,26 @@ class IndexedDBService {
       const store = transaction.objectStore('transactions');
       const request = store.getAll();
 
-      request.onsuccess = () => {
+      request.onsuccess = async () => {
+        let result = request.result || [];
+        
+        // Run auto-sync generator for active recurring items
+        try {
+          const synced = await this.syncRecurringTransactions(result);
+          if (synced) {
+            // Re-fetch updated list after auto-generation
+            const refreshed = await new Promise<Transaction[]>((res) => {
+              const req2 = store.getAll();
+              req2.onsuccess = () => res(req2.result || []);
+              req2.onerror = () => res(result);
+            });
+            result = refreshed;
+          }
+        } catch {
+          // ignore auto-sync errors
+        }
+
         // Sort transactions by date descending (newest first)
-        const result = request.result || [];
         result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         resolve(result);
       };
@@ -147,6 +169,56 @@ class IndexedDBService {
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
+  }
+
+  /**
+   * Auto-generates missing monthly transaction entries for active recurring items (EMIs, SIPs, etc.)
+   */
+  public async syncRecurringTransactions(transactions: Transaction[]): Promise<boolean> {
+    const recurringMasters = transactions.filter(tx => tx.isRecurring && !tx.parentRecurringId);
+    if (recurringMasters.length === 0) return false;
+
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth(); // 0-indexed
+    const currentMonthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+
+    let createdCount = 0;
+
+    for (const master of recurringMasters) {
+      // Check if end date has passed
+      if (master.endDate) {
+        if (currentMonthPrefix > master.endDate.substring(0, 7)) {
+          continue; // Expired
+        }
+      }
+
+      // Check if entry for current month already exists
+      const exists = transactions.some(tx => 
+        (tx.parentRecurringId === master.id || tx.id === master.id) &&
+        tx.date.startsWith(currentMonthPrefix)
+      );
+
+      if (!exists && master.id !== undefined) {
+        const day = master.dayOfMonth || parseInt(master.date.split('-')[2] || '1', 10);
+        const maxDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const validDay = Math.min(day, maxDaysInMonth);
+        const autoDateStr = `${currentMonthPrefix}-${String(validDay).padStart(2, '0')}`;
+
+        await this.addTransaction({
+          amount: master.amount,
+          category: master.category,
+          date: autoDateStr,
+          description: `${master.description || master.category} (Auto-recurring)`,
+          type: master.type,
+          parentRecurringId: master.id,
+          isRecurring: false
+        });
+        createdCount++;
+      }
+    }
+
+    return createdCount > 0;
   }
 
   // --- BUDGETS ---
