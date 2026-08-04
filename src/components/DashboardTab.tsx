@@ -25,6 +25,7 @@ import {
   HelpCircle,
   Edit2,
   Trash2,
+  Copy,
   PiggyBank,
   Landmark,
   ShieldCheck,
@@ -38,6 +39,7 @@ interface DashboardTabProps {
   settings: AppSettings;
   onAddTransactionClick: () => void;
   onEditTransactionClick: (tx: Transaction) => void;
+  onDuplicateTransactionClick: (tx: Transaction) => void;
   onDeleteTransactionClick: (id: number) => void;
   onViewAllClick: () => void;
 }
@@ -113,6 +115,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   settings,
   onAddTransactionClick,
   onEditTransactionClick,
+  onDuplicateTransactionClick,
   onDeleteTransactionClick,
   onViewAllClick
 }) => {
@@ -334,13 +337,23 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                         className="icon-btn" 
                         onClick={() => onEditTransactionClick(tx)}
                         aria-label="Edit transaction"
+                        title="Edit transaction"
                       >
                         <Edit2 size={16} />
+                      </button>
+                      <button 
+                        className="icon-btn" 
+                        onClick={() => onDuplicateTransactionClick(tx)}
+                        aria-label="Duplicate transaction"
+                        title="Duplicate transaction"
+                      >
+                        <Copy size={16} />
                       </button>
                       <button 
                         className="icon-btn btn-delete" 
                         onClick={() => tx.id && onDeleteTransactionClick(tx.id)}
                         aria-label="Delete transaction"
+                        title="Delete transaction"
                       >
                         <Trash2 size={16} />
                       </button>

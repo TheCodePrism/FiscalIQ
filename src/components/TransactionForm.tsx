@@ -161,7 +161,11 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         </button>
 
         <h3 style={{ fontSize: '1.5rem', marginBottom: '24px' }}>
-          {transactionToEdit ? 'Edit Transaction' : 'Add Transaction'}
+          {transactionToEdit && transactionToEdit.id !== undefined 
+            ? 'Edit Transaction' 
+            : transactionToEdit 
+              ? 'Duplicate Transaction' 
+              : 'Add Transaction'}
         </h3>
 
         <form onSubmit={handleSubmit}>
@@ -257,7 +261,11 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '30px' }}>
             <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
             <button type="submit" className={type === 'expense' ? 'btn btn-danger' : 'btn btn-success'} disabled={submitting}>
-              {submitting ? 'Saving...' : transactionToEdit ? 'Save Changes' : 'Add Entry'}
+              {submitting 
+                ? 'Saving...' 
+                : (transactionToEdit && transactionToEdit.id !== undefined) 
+                  ? 'Save Changes' 
+                  : 'Add Entry'}
             </button>
           </div>
         </form>

@@ -12,13 +12,15 @@ import {
   Edit2, 
   Trash2,
   ChevronDown,
-  RefreshCw
+  RefreshCw,
+  Copy
 } from 'lucide-react';
 
 interface TransactionListProps {
   transactions: Transaction[];
   settings: AppSettings;
   onEditTransactionClick: (tx: Transaction) => void;
+  onDuplicateTransactionClick: (tx: Transaction) => void;
   onDeleteTransactionClick: (id: number) => void;
 }
 
@@ -28,6 +30,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   transactions,
   settings,
   onEditTransactionClick,
+  onDuplicateTransactionClick,
   onDeleteTransactionClick
 }) => {
   const [search, setSearch] = useState('');
@@ -343,13 +346,23 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                             className="icon-btn" 
                             onClick={() => onEditTransactionClick(tx)}
                             aria-label="Edit transaction"
+                            title="Edit transaction"
                           >
                             <Edit2 size={16} />
+                          </button>
+                          <button 
+                            className="icon-btn" 
+                            onClick={() => onDuplicateTransactionClick(tx)}
+                            aria-label="Duplicate transaction"
+                            title="Duplicate transaction"
+                          >
+                            <Copy size={16} />
                           </button>
                           <button 
                             className="icon-btn btn-delete" 
                             onClick={() => tx.id && onDeleteTransactionClick(tx.id)}
                             aria-label="Delete transaction"
+                            title="Delete transaction"
                           >
                             <Trash2 size={16} />
                           </button>

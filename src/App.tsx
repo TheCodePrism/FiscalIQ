@@ -103,6 +103,12 @@ export const App: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleDuplicateTransaction = (tx: Transaction) => {
+    const { id, parentRecurringId, ...rest } = tx;
+    setTransactionToEdit(rest as Transaction);
+    setIsModalOpen(true);
+  };
+
   const handleSaveTransaction = async (tx: Transaction) => {
     if (tx.id !== undefined) {
       await updateTransaction(tx);
@@ -340,6 +346,7 @@ export const App: React.FC = () => {
               settings={settings}
               onAddTransactionClick={handleOpenAddModal}
               onEditTransactionClick={handleOpenEditModal}
+              onDuplicateTransactionClick={handleDuplicateTransaction}
               onDeleteTransactionClick={handleDeleteTransaction}
               onViewAllClick={() => setActiveTab('transactions')}
             />
@@ -350,6 +357,7 @@ export const App: React.FC = () => {
               transactions={transactions}
               settings={settings}
               onEditTransactionClick={handleOpenEditModal}
+              onDuplicateTransactionClick={handleDuplicateTransaction}
               onDeleteTransactionClick={handleDeleteTransaction}
             />
           )}
